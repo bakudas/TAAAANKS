@@ -6,8 +6,6 @@
 #include "Camera/CameraComponent.h"
 #include "Bullet.h"
 #include "DrawDebugHelpers.h"
-#include "BoneControllers/AnimNode_LookAt.h"
-#include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"
 
 /**
@@ -63,7 +61,6 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	// Axis Mapping
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ATank::Move);
 	PlayerInputComponent->BindAxis(TEXT("TurnRate"), this, &ATank::BaseTurn);
-	PlayerInputComponent->BindAxis(TEXT("TurretTurnRate"), this, &ATank::TurretTurn);
 }
 
 
@@ -96,7 +93,6 @@ void ATank::FireProjectile()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PEW"));
 }
-
 
 
 void ATank::RotateTurret(FVector LookAtTarget)
