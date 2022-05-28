@@ -114,10 +114,10 @@ auto ATank::FireProjectile() -> void
 auto ATank::RotateTurret(FVector &TargetLocation) -> void
 {
 	// Get and set Start location 
-	FVector StartLocation = TurretMesh->GetComponentLocation();
+	const FVector StartLocation = TurretMesh->GetComponentLocation();
 
 	// Perform a method FindLookAtRotation -> Kismet Math Library and set Rotator with the result
-	FRotator LookAtTargetRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
+	const FRotator LookAtTargetRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
 
 	// Set Turret relative location to new Yaw value 
 	TurretMesh->SetRelativeRotation(FRotator(0,LookAtTargetRotation.Yaw,0));
