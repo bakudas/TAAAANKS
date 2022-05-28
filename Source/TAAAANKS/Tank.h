@@ -14,9 +14,10 @@ class TAAAANKS_API ATank : public ABasePawn
 {
 	GENERATED_BODY()
 
-	public:
+public:
 	ATank();
-	void RotateTurret(FVector LookAtTarget);
+	
+	void RotateTurret(FVector& TargetLocation);
 
 private:
 
@@ -40,8 +41,11 @@ private:
 	
 	
 	void Move(float Value);
+	
 	void BaseTurn(float Value);
+	
 	void TurretTurn(float Value);
+	
 	void FireProjectile();
 
 protected:

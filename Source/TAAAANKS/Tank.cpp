@@ -7,15 +7,18 @@
 #include "Bullet.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 /**
- * @brief 
+ * @TankPlayerClass 
  */
 ATank::ATank()
 {
+	// Setup Spring Arm Component and Attach to the root
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArm->SetupAttachment(RootComponent);
 
+	// Create and setup Camera Component and Attach to Spring Arm
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 }
@@ -25,11 +28,11 @@ ATank::ATank()
 void ATank::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Cast Controller as Player Controller
 	PlayerController = Cast<APlayerController>(GetController());
 	
 }
-
 
 // Called every frame
 void ATank::Tick(float DeltaTime)
@@ -38,17 +41,28 @@ void ATank::Tick(float DeltaTime)
 
 	if (PlayerController)
 	{
-		FHitResult HitResult;
-		PlayerController->GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, HitResult);
-
-		DrawDebugSphere(this->GetWorld(), HitResult.ImpactPoint, 30.f, 6.f, FColor(25, 253, 25, 255), false, -1, 0, 1.f);
-
-		RotateTurret(HitResult.ImpactPoint);
+		FHitResult HitResult; // Hit var
 		
+		// Get hit mouse location
+		PlayerController->GetHitResultUnderCursor(ECollisionChannel::ECC_Camera, false, HitResult);
+		
+		// Draw a debug sphere to see the location of mouse position in the world
+		DrawDebugSphere(
+			this->GetWorld(),
+			HitResult.Location,
+			100.f,
+			12.f,
+			FColor(.8f,0,1,255),
+			false,
+			0,
+			0,
+			5.f);
+		
+		// Call fuction to rotate the turret canon
+		RotateTurret(HitResult.Location);
 	}
 
 }
-
 
 // Called to bind functionality to input
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -63,41 +77,48 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("TurnRate"), this, &ATank::BaseTurn);
 }
 
-
-void ATank::Move(float Value)
+// Forward Movement method
+auto ATank::Move(float Value) -> void
 {
+	// Create and initialized a VectorZero
 	FVector DeltaLocation = FVector::ZeroVector;
+
+	// Set X value with value normalized by deltatime 
 	DeltaLocation.X = Value * MovementSpeed * UGameplayStatics::GetWorldDeltaSeconds(this);
+
+	// Add an Offset Location to current position and grant sweep mode as well
 	AddActorLocalOffset(DeltaLocation, true);
 }
 
-
-void ATank::BaseTurn(float Value)
+// Steering tank base
+auto ATank::BaseTurn(float Value) -> void
 {
+	// Create a initialized a Rotator with zero vector
 	FRotator DeltaRotation = FRotator::ZeroRotator;
+
+	// Set Yaw Rotator with value normalized by deltatime (GameplayStatics Library)
 	DeltaRotation.Yaw = Value * TurnRate * UGameplayStatics::GetWorldDeltaSeconds(this);
+
+	// Add value to curret rotation and grant sweep mode as well
 	AddActorLocalRotation(DeltaRotation, true);
 }
 
-
-void ATank::TurretTurn(float Value)
+// Fire Projectiles
+auto ATank::FireProjectile() -> void
 {
-	// 	
-	// FRotator DeltaRotation = FRotator::ZeroRotator;
-	// DeltaRotation.Yaw = Value * TurnRate * UGameplayStatics::GetWorldDeltaSeconds(this);
-	// TurretMesh->AddLocalRotation(DeltaRotation, true);
+	// TODO Spawn projectile from cpp
+	UE_LOG(LogTemp, Warning, TEXT("PEW")); // PEW PEW PEW
 }
 
-
-void ATank::FireProjectile()
+// Rotating the tank turret
+auto ATank::RotateTurret(FVector &TargetLocation) -> void
 {
-	UE_LOG(LogTemp, Warning, TEXT("PEW"));
-}
+	// Get and set Start location 
+	FVector StartLocation = TurretMesh->GetComponentLocation();
 
+	// Perform a method FindLookAtRotation -> Kismet Math Library and set Rotator with the result
+	FRotator LookAtTargetRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
 
-void ATank::RotateTurret(FVector LookAtTarget)
-{
-	FVector ToTarget = LookAtTarget - TurretMesh->GetComponentLocation();
-	FRotator LookAtRotation = FRotator(0.f, ToTarget.Rotation().Yaw, 0.f);
-	TurretMesh->SetWorldRotation(LookAtRotation);
+	// Set Turret relative location to new Yaw value 
+	TurretMesh->SetRelativeRotation(FRotator(0,LookAtTargetRotation.Yaw,0));
 }
